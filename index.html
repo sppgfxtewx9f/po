@@ -912,9 +912,9 @@
         }
 
         let suppliers = JSON.parse(localStorage.getItem('po_suppliers')) || [
-            { id: 'SUP-001', name: 'PT. Tani Makmur Sejahtera', category: 'Bahan Baku', contact: 'Bpk. Budi', phone: '081234567890', address: 'Jl. Raya Pertanian No. 12, Bandung' },
-            { id: 'SUP-002', name: 'CV. Office Prima Solusi', category: 'Opersional', contact: 'Ibu Siska', phone: '082198765432', address: 'Jl. Sudirman Kav. 22, Jakarta Pusat' },
-            { id: 'SUP-003', name: 'PT. HR Sejahtera Berkah', category: 'Insentif', contact: 'Bpk. Darmawan', phone: '085612345678', address: 'Jl. Gatot Subroto No. 88, Surabaya' }
+            { id: 'SUP-001', name: 'BUM Desa Sahabat Mandiri Sukajaya', category: 'Bahan Baku', contact: 'Deni Jawahir', phone: '081234567890', address: 'Kp. Legok Ringgit Desa Sukajaya },
+            { id: 'SUP-002', name: 'ICAD STORE', category: 'Opersional', contact: 'Baehaki', phone: '082198765432', address: 'Kp. Sukamahi Desa Sukajaya' },
+            { id: 'SUP-003', name: 'Yayasan Indung Kadeudeuh Lembur', category: 'Insentif', contact: 'Regi Febriansyah', phone: '085612345678', address: 'Munjul-Cilaku-Cianjur' }
         ];
 
         let items = JSON.parse(localStorage.getItem('po_items')) || [
@@ -922,9 +922,8 @@
             { id: 'ITM-002', name: 'Gula Pasir Kristal', category: 'Bahan Baku', unit: 'Kg', price: 16000 },
             { id: 'ITM-003', name: 'Minyak Goreng Sawit', category: 'Bahan Baku', unit: 'Liter', price: 18500 },
             { id: 'ITM-004', name: 'Kertas HVS A4 80gsm', category: 'Opersional', unit: 'Box', price: 55000 },
-            { id: 'ITM-005', name: 'Tinta Printer Epson 664', category: 'Opersional', unit: 'Pcs', price: 95000 },
-            { id: 'ITM-006', name: 'Bonus Lembur Karyawan Shift', category: 'Insentif', unit: 'Orang', price: 150000 },
-            { id: 'ITM-007', name: 'Reward Kehadiran Bulanan', category: 'Insentif', unit: 'Orang', price: 250000 }
+            { id: 'ITM-005', name: 'Tinta Printer Epson ', category: 'Opersional', unit: 'Pcs', price: 95000 },
+            { id: 'ITM-007', name: 'Reward Kehadiran Bulanan', category: 'Insentif', unit: 'Hari', price: 3758000 }
         ];
 
         let purchaseOrders = JSON.parse(localStorage.getItem('po_orders')) || [
