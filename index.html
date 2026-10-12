@@ -1,0 +1,1687 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Purchase Order (PO) Terpadu</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Inter & FontAwesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- html2pdf.js for PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f3ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            800: '#3730a3',
+                            900: '#312e81',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Modern Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        /* Glassmorphism subtle effect */
+        .glass-panel {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="h-full bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased flex flex-col transition-colors duration-300">
+
+    <div id="auth-screen" class="fixed inset-0 z-50 bg-slate-900/80 dark:bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-white/95 dark:bg-slate-900/95 rounded-3xl shadow-2xl max-w-md w-full p-8 border border-slate-200/60 dark:border-slate-800/80 relative overflow-hidden transition-all">
+            
+            <!-- Top Color Accent Bar -->
+            <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+
+            <!-- Login Header & Theme Switch Slide -->
+            <div id="login-box" class="space-y-6">
+                <div class="flex items-center justify-between">
+                    <div class="w-12 h-12 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center text-xl shadow-inner">
+                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                    </div>
+                    
+                    <!-- Slide Switch Theme Toggle for Login Page -->
+                    <div class="flex items-center space-x-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-full border border-slate-200 dark:border-slate-700">
+                        <span class="text-[11px] font-semibold px-2 text-slate-500 dark:text-slate-400 select-none">Theme</span>
+                        <button type="button" onclick="toggleTheme()" class="relative w-12 h-6 bg-slate-300 dark:bg-indigo-600 rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/50">
+                            <div id="login-theme-knob" class="absolute top-0.5 left-0.5 dark:translate-x-6 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 flex items-center justify-center text-[10px]">
+                                <i id="login-theme-icon" class="fa-solid fa-sun text-amber-500"></i>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Masuk Sistem PO</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Kelola Purchase Order & Inventory Bahan Baku</p>
+                </div>
+
+                <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Username / Email</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-user absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
+                            <input type="text" id="login-username" required class="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition outline-none" placeholder="admin / staff">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Password</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
+                            <input type="password" id="login-password" required class="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition outline-none" placeholder="••••••••">
+                        </div>
+                    </div>
+
+                    <div id="auth-error" class="hidden text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/50 p-3 rounded-xl border border-red-200 dark:border-red-900 flex items-center space-x-2">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        <span id="auth-error-msg">Username atau password salah!</span>
+                    </div>
+
+                    <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm shadow-md transition-all duration-200 flex items-center justify-center active:scale-[0.99]">
+                        <i class="fa-solid fa-right-to-bracket mr-2"></i> Masuk Sistem
+                    </button>
+                </form>
+
+                <!-- Demo Account Info Box -->
+                <div class="pt-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 -mx-8 -mb-8 p-6 text-xs text-slate-600 dark:text-slate-400 space-y-1">
+                    <p class="font-bold text-slate-700 dark:text-slate-300">Akun Demo Default:</p>
+                    <p>• Username: <code class="bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded text-indigo-600 dark:text-indigo-400 font-mono">admin</code> | Pass: <code class="bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded text-indigo-600 dark:text-indigo-400 font-mono">admin123</code> (Manager)</p>
+                    <p>• Username: <code class="bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded text-indigo-600 dark:text-indigo-400 font-mono">staff</code> | Pass: <code class="bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded text-indigo-600 dark:text-indigo-400 font-mono">staff123</code> (Purchasing)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 shadow-sm no-print shrink-0 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 text-white p-2 rounded-xl shadow-sm">
+                    <i class="fa-solid fa-file-invoice-dollar text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-base leading-tight text-slate-900 dark:text-white">PO Manager <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 font-medium">Pro</span></h1>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400">Purchase Order & Inventory System</p>
+                </div>
+            </div>
+
+            <!-- Main Navigation Tabs -->
+            <nav class="hidden md:flex items-center space-x-1">
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-3.5 py-2 rounded-xl text-xs font-semibold transition-all bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400"><i class="fa-solid fa-chart-pie mr-2"></i>Dashboard</button>
+                <button onclick="switchTab('po')" id="nav-po" class="px-3.5 py-2 rounded-xl text-xs font-semibold transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"><i class="fa-solid fa-cart-shopping mr-2"></i>Buat PO</button>
+                <button onclick="switchTab('suppliers')" id="nav-suppliers" class="px-3.5 py-2 rounded-xl text-xs font-semibold transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"><i class="fa-solid fa-truck-field mr-2"></i>Supplier</button>
+                <button onclick="switchTab('items')" id="nav-items" class="px-3.5 py-2 rounded-xl text-xs font-semibold transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"><i class="fa-solid fa-boxes-stacked mr-2"></i>Database Bahan</button>
+                <button onclick="switchTab('reports')" id="nav-reports" class="px-3.5 py-2 rounded-xl text-xs font-semibold transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"><i class="fa-solid fa-chart-line mr-2"></i>Laporan</button>
+            </nav>
+
+            <!-- User Profile & Theme Toggle Switch Header -->
+            <div class="flex items-center space-x-3">
+                <!-- Slide Switch Light / Dark Theme Button -->
+                <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-full border border-slate-200 dark:border-slate-700">
+                    <button type="button" onclick="toggleTheme()" class="relative w-11 h-6 bg-slate-300 dark:bg-indigo-600 rounded-full transition-colors duration-300 focus:outline-none" title="Ubah Tema">
+                        <div id="header-theme-knob" class="absolute top-0.5 left-0.5 dark:translate-x-5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 flex items-center justify-center text-[10px]">
+                            <i id="header-theme-icon" class="fa-solid fa-sun text-amber-500"></i>
+                        </div>
+                    </button>
+                </div>
+
+                <div id="user-info-badge" class="hidden md:flex items-center space-x-2.5 bg-slate-100 dark:bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
+                    <div class="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shadow-sm" id="user-avatar-initials">AD</div>
+                    <div class="text-xs">
+                        <p class="font-bold leading-tight text-slate-800 dark:text-slate-100" id="user-display-name">Admin</p>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-tight" id="user-role-name">Manager</p>
+                    </div>
+                </div>
+
+                <button onclick="handleLogout()" class="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-red-50 dark:bg-slate-800 dark:hover:bg-red-950/50 text-slate-600 hover:text-red-600 dark:text-slate-300 dark:hover:text-red-400 transition flex items-center space-x-1.5 border border-slate-200 dark:border-slate-700" title="Keluar dari Aplikasi">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span class="hidden sm:inline">Keluar</span>
+                </button>
+
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden">
+                    <button onclick="toggleMobileMenu()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"><i class="fa-solid fa-bars text-base"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Menu Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden px-4 pt-2 pb-4 space-y-1 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+            <button onclick="switchTab('dashboard'); toggleMobileMenu();" class="block w-full text-left px-3 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800">Dashboard</button>
+            <button onclick="switchTab('po'); toggleMobileMenu();" class="block w-full text-left px-3 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800">Buat PO</button>
+            <button onclick="switchTab('suppliers'); toggleMobileMenu();" class="block w-full text-left px-3 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800">Supplier</button>
+            <button onclick="switchTab('items'); toggleMobileMenu();" class="block w-full text-left px-3 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800">Database Bahan</button>
+            <button onclick="switchTab('reports'); toggleMobileMenu();" class="block w-full text-left px-3 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800">Laporan</button>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 overflow-y-auto">
+
+        <!-- TAB 1: DASHBOARD -->
+        <section id="tab-dashboard" class="space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between transition-all">
+                    <div>
+                        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Total PO Bulan Ini</p>
+                        <h3 id="dash-total-po" class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">0</h3>
+                    </div>
+                    <div class="w-11 h-11 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center text-lg shadow-inner">
+                        <i class="fa-solid fa-file-lines"></i>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between transition-all">
+                    <div>
+                        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Total Pengeluaran</p>
+                        <h3 id="dash-total-spend" class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">Rp 0</h3>
+                    </div>
+                    <div class="w-11 h-11 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center text-lg shadow-inner">
+                        <i class="fa-solid fa-wallet"></i>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between transition-all">
+                    <div>
+                        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Jumlah Supplier</p>
+                        <h3 id="dash-total-suppliers" class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">0</h3>
+                    </div>
+                    <div class="w-11 h-11 bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center text-lg shadow-inner">
+                        <i class="fa-solid fa-truck"></i>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between transition-all">
+                    <div>
+                        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Database Item</p>
+                        <h3 id="dash-total-items" class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">0</h3>
+                    </div>
+                    <div class="w-11 h-11 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center text-lg shadow-inner">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent PO List & Quick Actions -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80 p-6 transition-all">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-base font-bold text-slate-900 dark:text-white">Purchase Order Terbaru</h2>
+                        <button onclick="switchTab('po')" class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center">Buat PO Baru <i class="fa-solid fa-arrow-right ml-1"></i></button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
+                                    <th class="py-3 px-3">No PO</th>
+                                    <th class="py-3 px-3">Tanggal</th>
+                                    <th class="py-3 px-3">Supplier</th>
+                                    <th class="py-3 px-3">Kategori</th>
+                                    <th class="py-3 px-3">Total (Rp)</th>
+                                    <th class="py-3 px-3 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-po-table" class="divide-y divide-slate-100 dark:divide-slate-800/60">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80 p-6 flex flex-col justify-between transition-all">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900 dark:text-white mb-1">Akses Cepat Kategori</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Pilih kategori untuk langsung membuat Purchase Order.</p>
+                        <div class="space-y-2.5">
+                            <button onclick="openPOWithCategory('Bahan Baku')" class="w-full flex items-center justify-between p-3.5 bg-indigo-50/60 hover:bg-indigo-100/80 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 rounded-xl transition font-semibold text-xs border border-indigo-100 dark:border-indigo-900/40">
+                                <span class="flex items-center"><i class="fa-solid fa-wheat-awn mr-3 text-sm"></i> Bahan Baku</span>
+                                <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                            </button>
+                            <button onclick="openPOWithCategory('Opersional')" class="w-full flex items-center justify-between p-3.5 bg-emerald-50/60 hover:bg-emerald-100/80 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 rounded-xl transition font-semibold text-xs border border-emerald-100 dark:border-emerald-900/40">
+                                <span class="flex items-center"><i class="fa-solid fa-briefcase mr-3 text-sm"></i> Operasional</span>
+                                <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                            </button>
+                            <button onclick="openPOWithCategory('Insentif')" class="w-full flex items-center justify-between p-3.5 bg-amber-50/60 hover:bg-amber-100/80 dark:bg-amber-950/40 dark:hover:bg-amber-900/60 text-amber-700 dark:text-amber-300 rounded-xl transition font-semibold text-xs border border-amber-100 dark:border-amber-900/40">
+                                <span class="flex items-center"><i class="fa-solid fa-hand-holding-dollar mr-3 text-sm"></i> Insentif</span>
+                                <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 p-3.5 rounded-xl">
+                        <div class="flex items-center space-x-2.5 text-slate-500 dark:text-slate-400 text-xs">
+                            <i class="fa-solid fa-circle-info text-indigo-500 text-sm shrink-0"></i>
+                            <span>Penyimpanan data lokal otomatis pada browser Anda.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: BUAT PURCHASE ORDER -->
+        <section id="tab-po" class="hidden space-y-6">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80 p-6 sm:p-8 transition-all">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-6 border-b border-slate-200 dark:border-slate-800 gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 dark:text-white">Form Pembuatan Purchase Order (PO)</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Pilih kategori kebutuhan sebelum membuat dokumen PO.</p>
+                    </div>
+                    <div>
+                        <span class="text-xs font-bold px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 rounded-xl border border-indigo-200 dark:border-indigo-800" id="display-po-number">PO-20261013-001</span>
+                    </div>
+                </div>
+
+                <form id="po-form" class="mt-6 space-y-6" onsubmit="handlePOSubmit(event)">
+                    <!-- Step 1: Category Selection -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2.5">1. Pilih Kategori Kebutuhan <span class="text-red-500">*</span></label>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="po_category" value="Bahan Baku" class="peer sr-only" required onchange="onCategoryChange()">
+                                <div class="p-4 rounded-xl border-2 border-slate-200 dark:border-slate-800 peer-checked:border-indigo-600 dark:peer-checked:border-indigo-500 peer-checked:bg-indigo-50/50 dark:peer-checked:bg-indigo-950/30 transition flex items-center space-x-3">
+                                    <div class="w-9 h-9 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                                        <i class="fa-solid fa-wheat-awn text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-slate-900 dark:text-white text-xs">Bahan Baku</h4>
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Material produksi utama</p>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="po_category" value="Opersional" class="peer sr-only" required onchange="onCategoryChange()">
+                                <div class="p-4 rounded-xl border-2 border-slate-200 dark:border-slate-800 peer-checked:border-indigo-600 dark:peer-checked:border-indigo-500 peer-checked:bg-indigo-50/50 dark:peer-checked:bg-indigo-950/30 transition flex items-center space-x-3">
+                                    <div class="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                                        <i class="fa-solid fa-briefcase text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-slate-900 dark:text-white text-xs">Operasional</h4>
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Alat & keperluan kantor</p>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="po_category" value="Insentif" class="peer sr-only" required onchange="onCategoryChange()">
+                                <div class="p-4 rounded-xl border-2 border-slate-200 dark:border-slate-800 peer-checked:border-indigo-600 dark:peer-checked:border-indigo-500 peer-checked:bg-indigo-50/50 dark:peer-checked:bg-indigo-950/30 transition flex items-center space-x-3">
+                                    <div class="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                                        <i class="fa-solid fa-hand-holding-dollar text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-slate-900 dark:text-white text-xs">Insentif</h4>
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Bonus & reward karyawan</p>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Supplier & Date Information -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Pilih Supplier <span class="text-red-500">*</span></label>
+                            <select id="po-supplier" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none text-xs" required onchange="updateSupplierDetails()">
+                                <option value="">-- Pilih Supplier --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Tanggal PO <span class="text-red-500">*</span></label>
+                            <input type="date" id="po-date" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none text-xs" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Estimasi Pengiriman / Selesai</label>
+                            <input type="date" id="po-delivery-date" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none text-xs">
+                        </div>
+                    </div>
+
+                    <!-- Supplier Details Preview Box -->
+                    <div id="supplier-preview" class="hidden bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 space-y-1">
+                        <p class="font-bold text-slate-900 dark:text-white" id="prev-supp-name">-</p>
+                        <p id="prev-supp-address">-</p>
+                        <p>Badan Usaha: <span id="prev-supp-entity" class="font-semibold text-indigo-600 dark:text-indigo-400">-</span> | Komoditas: <span id="prev-supp-commodity" class="font-semibold">-</span></p>
+                        <p>Pimpinan: <span id="prev-supp-leader" class="font-semibold">-</span> | No. Kontrak: <span id="prev-supp-contract" class="font-semibold text-indigo-600 dark:text-indigo-400">-</span></p>
+                        <p>Kontak: <span id="prev-supp-contact" class="font-semibold">-</span> | Telp: <span id="prev-supp-phone" class="font-semibold">-</span></p>
+                    </div>
+
+                    <!-- Step 3: Itemized List -->
+                    <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center justify-between mb-3">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">3. Rincian Item / Kebutuhan <span class="text-red-500">*</span></label>
+                            <button type="button" onclick="addPOItemRow()" class="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-600 dark:text-indigo-300 rounded-xl text-xs font-semibold transition flex items-center border border-indigo-200 dark:border-indigo-800"><i class="fa-solid fa-plus mr-1.5"></i> Tambah Item</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead>
+                                    <tr class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider border-y border-slate-200 dark:border-slate-700">
+                                        <th class="py-2.5 px-3 w-2/5">Nama Item / Bahan / Keperluan</th>
+                                        <th class="py-2.5 px-3 w-1/6">Jumlah / Qty</th>
+                                        <th class="py-2.5 px-3 w-1/6">Satuan</th>
+                                        <th class="py-2.5 px-3 w-1/5">Harga Satuan (Rp)</th>
+                                        <th class="py-2.5 px-3 w-1/5">Subtotal (Rp)</th>
+                                        <th class="py-2.5 px-3 w-12 text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="po-items-body" class="divide-y divide-slate-100 dark:divide-slate-800">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="flex justify-end mt-4 pt-3 border-t border-slate-200 dark:border-slate-800 text-right">
+                            <div class="w-full sm:w-72 space-y-2">
+                                <div class="flex justify-between text-xs text-slate-600 dark:text-slate-400">
+                                    <span>Subtotal:</span>
+                                    <span id="po-subtotal-text" class="font-semibold text-slate-800 dark:text-slate-200">Rp 0</span>
+                                </div>
+                                <div class="flex justify-between text-xs text-slate-600 dark:text-slate-400 items-center">
+                                    <span>PPN (11%):</span>
+                                    <label class="flex items-center space-x-2 text-xs">
+                                        <input type="checkbox" id="po-use-tax" onchange="calculatePOTotals()" class="rounded border-slate-300 dark:border-slate-700 text-indigo-600 focus:ring-indigo-500 dark:bg-slate-800">
+                                        <span class="text-[11px]">Gunakan PPN</span>
+                                    </label>
+                                </div>
+                                <div id="tax-row" class="hidden flex justify-between text-xs text-slate-600 dark:text-slate-400">
+                                    <span>Nilai PPN:</span>
+                                    <span id="po-tax-text" class="font-semibold text-slate-800 dark:text-slate-200">Rp 0</span>
+                                </div>
+                                <div class="flex justify-between text-sm font-bold text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-800">
+                                    <span>Total Akhir:</span>
+                                    <span id="po-grandtotal-text" class="text-indigo-600 dark:text-indigo-400">Rp 0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notes & Submit -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Catatan Tambahan untuk Supplier</label>
+                            <textarea id="po-notes" rows="3" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none text-xs" placeholder="Contoh: Pengiriman harap dikirim sebelum jam 15.00 WIB..."></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Syarat & Ketentuan Pembayaran</label>
+                            <textarea id="po-terms" rows="3" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none text-xs">Pembayaran Tempo 30 Hari Setelah Barang Diterima.</textarea>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end space-x-3 pt-6 border-t border-slate-200 dark:border-slate-800">
+                        <button type="button" onclick="switchTab('dashboard')" class="px-5 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">Batal</button>
+                        <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-md transition flex items-center"><i class="fa-solid fa-floppy-disk mr-2"></i> Simpan & Buat PO</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- TAB 3: SUPPLIER DATABASE -->
+        <section id="tab-suppliers" class="hidden space-y-6">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80 p-6 sm:p-8 transition-all">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-6 border-b border-slate-200 dark:border-slate-800 gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 dark:text-white">Database Supplier</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Kelola daftar rekanan supplier bahan baku, operasional, & insentif.</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="downloadSuppliersPDF()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center"><i class="fa-solid fa-file-pdf mr-2"></i> Download PDF</button>
+                        <button onclick="openSupplierModal()" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center"><i class="fa-solid fa-user-plus mr-2"></i> Tambah Supplier</button>
+                    </div>
+                </div>
+
+                <div id="printable-suppliers-area" class="mt-6 overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
+                                <th class="py-3 px-4">Nama Supplier</th>
+                                <th class="py-3 px-4">Badan Usaha</th>
+                                <th class="py-3 px-4">Komoditas</th>
+                                <th class="py-3 px-4">Nama Pimpinan</th>
+                                <th class="py-3 px-4">No. Kontrak</th>
+                                <th class="py-3 px-4">Kontak Person</th>
+                                <th class="py-3 px-4">No Telepon</th>
+                                <th class="py-3 px-4 text-center no-print">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="suppliers-table-body" class="divide-y divide-slate-100 dark:divide-slate-800/60">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: ITEM / BAHAN BAKU DATABASE -->
+        <section id="tab-items" class="hidden space-y-6">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80 p-6 sm:p-8 transition-all">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-6 border-b border-slate-200 dark:border-slate-800 gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 dark:text-white">Database Bahan & Kebutuhan</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Daftar item untuk 3 kategori: Bahan Baku, Operasional, & Insentif.</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="downloadItemsPDF()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center"><i class="fa-solid fa-file-pdf mr-2"></i> Download PDF</button>
+                        <button onclick="openItemModal()" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center"><i class="fa-solid fa-box-open mr-2"></i> Tambah Item</button>
+                    </div>
+                </div>
+
+                <!-- Filter Tabs for Items -->
+                <div class="flex flex-wrap gap-2 mt-6 pb-4 border-b border-slate-100 dark:border-slate-800">
+                    <button onclick="filterItemCategory('Semua')" id="filter-item-semua" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition">Semua Kategori</button>
+                    <button onclick="filterItemCategory('Bahan Baku')" id="filter-item-bahan" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">Bahan Baku</button>
+                    <button onclick="filterItemCategory('Opersional')" id="filter-item-op" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">Operasional</button>
+                    <button onclick="filterItemCategory('Insentif')" id="filter-item-ins" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">Insentif</button>
+                </div>
+
+                <div id="printable-items-area" class="mt-6 overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
+                                <th class="py-3 px-4">Nama Item / Bahan</th>
+                                <th class="py-3 px-4">Kategori</th>
+                                <th class="py-3 px-4">Satuan</th>
+                                <th class="py-3 px-4">Estimasi Harga (Rp)</th>
+                                <th class="py-3 px-4 text-center no-print">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="items-table-body" class="divide-y divide-slate-100 dark:divide-slate-800/60">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 5: LAPORAN PO -->
+        <section id="tab-reports" class="hidden space-y-6">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800/80 p-6 sm:p-8 transition-all">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-6 border-b border-slate-200 dark:border-slate-800 gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 dark:text-white">Laporan Purchase Order (PO)</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Filter laporan harian, mingguan, bulanan, atau tahunan dan cetak/unduh PDF.</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="downloadReportPDF()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center"><i class="fa-solid fa-file-pdf mr-2"></i> Download PDF Laporan</button>
+                    </div>
+                </div>
+
+                <!-- Report Filter Controls -->
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mt-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200/80 dark:border-slate-700/80">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Periode Laporan</label>
+                        <select id="report-type" onchange="toggleReportFilters()" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="daily">Harian</option>
+                            <option value="weekly">Mingguan</option>
+                            <option value="monthly">Bulanan</option>
+                            <option value="yearly">Tahunan</option>
+                        </select>
+                    </div>
+                    <div id="filter-container-date">
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Pilih Tanggal</label>
+                        <input type="date" id="report-date" onchange="renderReports()" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div id="filter-container-month" class="hidden">
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Pilih Bulan & Tahun</label>
+                        <input type="month" id="report-month" onchange="renderReports()" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div id="filter-container-year" class="hidden">
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Pilih Tahun</label>
+                        <select id="report-year" onchange="renderReports()" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="2026">2026</option>
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Kategori</label>
+                        <select id="report-category" onchange="renderReports()" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="Semua">Semua Kategori</option>
+                            <option value="Bahan Baku">Bahan Baku</option>
+                            <option value="Opersional">Operasional</option>
+                            <option value="Insentif">Insentif</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Report Summary Stats -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+                    <div class="bg-indigo-50/70 dark:bg-indigo-950/40 p-4 rounded-2xl border border-indigo-100 dark:border-indigo-900/40">
+                        <p class="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Total Dokumen PO</p>
+                        <h4 id="report-summary-count" class="text-xl font-extrabold text-indigo-950 dark:text-indigo-200 mt-1">0 PO</h4>
+                    </div>
+                    <div class="bg-emerald-50/70 dark:bg-emerald-950/40 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-900/40">
+                        <p class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Total Pengeluaran</p>
+                        <h4 id="report-summary-amount" class="text-xl font-extrabold text-emerald-950 dark:text-emerald-200 mt-1">Rp 0</h4>
+                    </div>
+                    <div class="bg-amber-50/70 dark:bg-amber-950/40 p-4 rounded-2xl border border-amber-100 dark:border-amber-900/40">
+                        <p class="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Rata-rata Nilai PO</p>
+                        <h4 id="report-summary-avg" class="text-xl font-extrabold text-amber-950 dark:text-amber-200 mt-1">Rp 0</h4>
+                    </div>
+                </div>
+
+                <!-- Printable Report Area -->
+                <div id="report-printable-area" class="mt-6 overflow-x-auto bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80">
+                    <div class="text-center mb-6 pb-4 border-b border-slate-200 dark:border-slate-800">
+                        <h3 class="text-base font-bold text-slate-900 dark:text-white">LAPORAN PURCHASE ORDER (PO)</h3>
+                        <p id="report-period-title" class="text-xs text-slate-500 dark:text-slate-400">Periode: Harian</p>
+                    </div>
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">
+                                <th class="py-3 px-3">No PO</th>
+                                <th class="py-3 px-3">Tanggal</th>
+                                <th class="py-3 px-3">Supplier</th>
+                                <th class="py-3 px-3">Kategori</th>
+                                <th class="py-3 px-3">Jumlah Item</th>
+                                <th class="py-3 px-3 text-right">Total (Rp)</th>
+                                <th class="py-3 px-3 text-center no-print">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="report-table-body" class="divide-y divide-slate-100 dark:divide-slate-800">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL: SUPPLIER FORM -->
+    <div id="supplier-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-lg w-full p-6 sm:p-8 space-y-6 border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+                <h3 id="supplier-modal-title" class="text-base font-bold text-slate-900 dark:text-white">Tambah Supplier Baru</h3>
+                <button onclick="closeSupplierModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="supplier-form" onsubmit="handleSupplierSubmit(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="supplier-id">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Supplier <span class="text-red-500">*</span></label>
+                        <input type="text" id="supp-name" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" required placeholder="Contoh: Sumber Makmur">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Jenis Badan Usaha <span class="text-red-500">*</span></label>
+                        <select id="supp-entity" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
+                            <option value="PT. Perseorangan">PT. Perseorangan</option>
+                            <option value="Koperasi">Koperasi</option>
+                            <option value="BUMDesa">BUMDesa</option>
+                            <option value="Koperasi Merah Putih">Koperasi Merah Putih</option>
+                            <option value="Individu">Individu</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Komoditas <span class="text-red-500">*</span></label>
+                        <input type="text" id="supp-commodity" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" required placeholder="Contoh: Beras, ATK, Jasa">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Pimpinan <span class="text-red-500">*</span></label>
+                        <input type="text" id="supp-leader" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" required placeholder="Nama Direktur / Pemilik">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Nomor Kontrak Kerjasama <span class="text-red-500">*</span></label>
+                    <input type="text" id="supp-contract" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" required placeholder="Contoh: SPK/2026/X/001">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Kategori Utama <span class="text-red-500">*</span></label>
+                    <select id="supp-category" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
+                        <option value="Bahan Baku">Bahan Baku</option>
+                        <option value="Opersional">Operasional</option>
+                        <option value="Insentif">Insentif</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Kontak Person <span class="text-red-500">*</span></label>
+                        <input type="text" id="supp-contact" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" required placeholder="Nama PIC">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">No Telepon <span class="text-red-500">*</span></label>
+                        <input type="text" id="supp-phone" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" required placeholder="08xxxxxxxxxx">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Alamat Lengkap <span class="text-red-500">*</span></label>
+                    <textarea id="supp-address" rows="3" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" required placeholder="Alamat supplier..."></textarea>
+                </div>
+                <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" onclick="closeSupplierModal()" class="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-sm">Simpan Supplier</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ITEM FORM -->
+    <div id="item-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-lg w-full p-6 sm:p-8 space-y-6 border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+                <h3 id="item-modal-title" class="text-base font-bold text-slate-900 dark:text-white">Tambah Item / Bahan Baru</h3>
+                <button onclick="closeItemModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="item-form" onsubmit="handleItemSubmit(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="item-id">
+                <div>
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Item / Bahan / Keperluan <span class="text-red-500">*</span></label>
+                    <input type="text" id="it-name" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" required placeholder="Contoh: Tepung Terigu / Tulis Bonus Lembur">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Kategori <span class="text-red-500">*</span></label>
+                    <select id="it-category" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
+                        <option value="Bahan Baku">Bahan Baku</option>
+                        <option value="Opersional">Operasional</option>
+                        <option value="Insentif">Insentif</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Satuan <span class="text-red-500">*</span></label>
+                        <input type="text" id="it-unit" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" required placeholder="Kg / Pcs / Box / Orang">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Estimasi Harga Satuan (Rp) <span class="text-red-500">*</span></label>
+                        <input type="number" id="it-price" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" required placeholder="0">
+                    </div>
+                </div>
+                <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" onclick="closeItemModal()" class="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-sm">Simpan Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: PO PREVIEW & PRINT/PDF DOWNLOAD -->
+    <div id="po-preview-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-3xl w-full p-6 sm:p-8 space-y-6 my-8 max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800 no-print">
+                <h3 class="text-base font-bold text-slate-900 dark:text-white">Pratinjau Dokumen Purchase Order (PO)</h3>
+                <div class="flex items-center space-x-2">
+                    <button onclick="downloadActivePOPDF()" class="px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-semibold transition flex items-center"><i class="fa-solid fa-file-pdf mr-2"></i> Download PDF</button>
+                    <button onclick="closePOPreviewModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-2"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+            </div>
+
+            <!-- Printable PO Document Layout -->
+            <div id="printable-po-document" class="bg-white p-8 text-slate-800 space-y-6 border border-slate-200 rounded-2xl">
+                <!-- Header -->
+                <div class="flex justify-between items-start border-b-2 border-indigo-600 pb-6">
+                    <div>
+                        <h2 class="text-2xl font-black text-indigo-700 uppercase tracking-wide">PURCHASE ORDER</h2>
+                        <p class="text-xs text-slate-500 mt-1" id="pdf-po-number">No: PO-20261013-001</p>
+                    </div>
+                    <div class="text-right">
+                        <h3 class="font-bold text-slate-900 text-sm">PT. PERUSAHAAN ANDALAN</h3>
+                        <p class="text-xs text-slate-500">Jl. Industri Raya No. 45, Jakarta</p>
+                        <p class="text-xs text-slate-500">Email: procurement@perusahaan.com | Telp: (021) 555-0199</p>
+                    </div>
+                </div>
+
+                <!-- Meta Information -->
+                <div class="grid grid-cols-2 gap-6 text-xs">
+                    <div class="space-y-1 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <p class="font-bold text-slate-700 uppercase">Kepada Supplier:</p>
+                        <p id="pdf-supp-name" class="font-semibold text-slate-900 text-sm">-</p>
+                        <p id="pdf-supp-address" class="text-slate-600">-</p>
+                        <p>Badan Usaha: <span id="pdf-supp-entity" class="font-semibold text-indigo-700">-</span> | Komoditas: <span id="pdf-supp-commodity" class="font-semibold">-</span></p>
+                        <p>Pimpinan: <span id="pdf-supp-leader" class="font-semibold">-</span> | No. Kontrak: <span id="pdf-supp-contract" class="font-semibold text-indigo-700">-</span></p>
+                        <p>Telp/Kontak: <span id="pdf-supp-contact" class="font-medium">-</span></p>
+                    </div>
+                    <div class="space-y-1 bg-slate-50 p-4 rounded-xl border border-slate-100 text-right">
+                        <p><strong>Tanggal PO:</strong> <span id="pdf-po-date">-</span></p>
+                        <p><strong>Estimasi Kirim:</strong> <span id="pdf-po-delivery">-</span></p>
+                        <p><strong>Kategori:</strong> <span id="pdf-po-category" class="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded font-semibold">-</span></p>
+                    </div>
+                </div>
+
+                <!-- Items Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-indigo-50 text-indigo-900 font-bold border-b border-indigo-100">
+                                <th class="py-2.5 px-3">No</th>
+                                <th class="py-2.5 px-3">Nama Item / Kebutuhan</th>
+                                <th class="py-2.5 px-3 text-center">Qty</th>
+                                <th class="py-2.5 px-3">Satuan</th>
+                                <th class="py-2.5 px-3 text-right">Harga Satuan</th>
+                                <th class="py-2.5 px-3 text-right">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pdf-items-body" class="divide-y divide-slate-100">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Totals -->
+                <div class="flex justify-end pt-2">
+                    <div class="w-64 space-y-1.5 text-xs">
+                        <div class="flex justify-between text-slate-600">
+                            <span>Subtotal:</span>
+                            <span id="pdf-subtotal">Rp 0</span>
+                        </div>
+                        <div id="pdf-tax-container" class="flex justify-between text-slate-600 hidden">
+                            <span>PPN (11%):</span>
+                            <span id="pdf-tax">Rp 0</span>
+                        </div>
+                        <div class="flex justify-between font-bold text-sm text-slate-900 pt-2 border-t border-slate-200">
+                            <span>Grand Total:</span>
+                            <span id="pdf-grandtotal" class="text-indigo-600">Rp 0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes & Terms -->
+                <div class="grid grid-cols-2 gap-4 text-xs pt-4 border-t border-slate-200">
+                    <div>
+                        <p class="font-bold text-slate-700 mb-1">Catatan:</p>
+                        <p id="pdf-notes" class="text-slate-600 italic">-</p>
+                    </div>
+                    <div>
+                        <p class="font-bold text-slate-700 mb-1">Syarat & Ketentuan:</p>
+                        <p id="pdf-terms" class="text-slate-600">-</p>
+                    </div>
+                </div>
+
+                <!-- Signatures -->
+                <div class="grid grid-cols-3 pt-12 text-center text-xs">
+                    <div>
+                        <p class="text-slate-500 mb-16">Dibuat Oleh,</p>
+                        <p class="font-bold border-b border-slate-400 pb-1 inline-block px-6">Purchasing Staff</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-500 mb-16">Disetujui Oleh,</p>
+                        <p class="font-bold border-b border-slate-400 pb-1 inline-block px-6">Manager Keuangan</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-500 mb-16">Disetujui Supplier,</p>
+                        <p class="font-bold border-b border-slate-400 pb-1 inline-block px-6">Hormat Kami</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-4 border-t border-slate-200 dark:border-slate-800 no-print">
+                <button onclick="closePOPreviewModal()" class="px-5 py-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Theme Logic ---
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                updateThemeUI(true);
+            } else {
+                document.documentElement.classList.remove('dark');
+                updateThemeUI(false);
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateThemeUI(isDark);
+        }
+
+        function updateThemeUI(isDark) {
+            const headerIcon = document.getElementById('header-theme-icon');
+            const loginIcon = document.getElementById('login-theme-icon');
+
+            if (isDark) {
+                if (headerIcon) headerIcon.className = "fa-solid fa-moon text-indigo-400";
+                if (loginIcon) loginIcon.className = "fa-solid fa-moon text-indigo-400";
+            } else {
+                if (headerIcon) headerIcon.className = "fa-solid fa-sun text-amber-500";
+                if (loginIcon) loginIcon.className = "fa-solid fa-sun text-amber-500";
+            }
+        }
+
+        // --- Authentication State & Accounts ---
+        const defaultUsers = [
+            { username: 'admin', password: 'admin123', name: 'Administrator', role: 'Manager' },
+            { username: 'staff', password: 'staff123', name: 'Purchasing Staff', role: 'Purchasing' }
+        ];
+
+        let currentUser = JSON.parse(localStorage.getItem('po_current_user')) || null;
+
+        function checkAuth() {
+            const authScreen = document.getElementById('auth-screen');
+            if (!currentUser) {
+                authScreen.classList.remove('hidden');
+            } else {
+                authScreen.classList.add('hidden');
+                updateUserUI();
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const usernameInput = document.getElementById('login-username').value.trim();
+            const passwordInput = document.getElementById('login-password').value.trim();
+            const errorMsg = document.getElementById('auth-error');
+
+            const foundUser = defaultUsers.find(u => u.username.toLowerCase() === usernameInput.toLowerCase() && u.password === passwordInput);
+
+            if (foundUser) {
+                currentUser = { name: foundUser.name, role: foundUser.role, username: foundUser.username };
+                localStorage.setItem('po_current_user', JSON.stringify(currentUser));
+                errorMsg.classList.add('hidden');
+                document.getElementById('login-form').reset();
+                checkAuth();
+                switchTab('dashboard');
+            } else {
+                errorMsg.classList.remove('hidden');
+            }
+        }
+
+        function handleLogout() {
+            if (confirm('Apakah Anda yakin ingin keluar dari aplikasi?')) {
+                currentUser = null;
+                localStorage.removeItem('po_current_user');
+                checkAuth();
+            }
+        }
+
+        function updateUserUI() {
+            if (!currentUser) return;
+            document.getElementById('user-display-name').innerText = currentUser.name;
+            document.getElementById('user-role-name').innerText = currentUser.role;
+            const initials = currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+            document.getElementById('user-avatar-initials').innerText = initials;
+        }
+
+        let suppliers = JSON.parse(localStorage.getItem('po_suppliers')) || [
+            { id: 'SUP-001', name: 'Tani Makmur Sejahtera', entity: 'PT. Perseorangan', commodity: 'Bahan Pangan & Pertanian', leader: 'Bpk. Budi Santoso', contract: 'SPK/2026/01/012', category: 'Bahan Baku', contact: 'Bpk. Budi', phone: '081234567890', address: 'Jl. Raya Pertanian No. 12, Bandung' },
+            { id: 'SUP-002', name: 'Office Prima Solusi', entity: 'Koperasi', commodity: 'Peralatan & Perlengkapan Kantor', leader: 'Ibu Siska Wijaya', contract: 'KOP/2025/11/045', category: 'Opersional', contact: 'Ibu Siska', phone: '082198765432', address: 'Jl. Sudirman Kav. 22, Jakarta Pusat' },
+            { id: 'SUP-003', name: 'HR Sejahtera Berkah', entity: 'BUMDesa', commodity: 'Jasa & Insentif Karyawan', leader: 'Bpk. Darmawan', contract: 'BMD/2026/02/088', category: 'Insentif', contact: 'Bpk. Darmawan', phone: '085612345678', address: 'Jl. Gatot Subroto No. 88, Surabaya' }
+        ];
+
+        let items = JSON.parse(localStorage.getItem('po_items')) || [
+            { id: 'ITM-001', name: 'Tepung Terigu Premium', category: 'Bahan Baku', unit: 'Kg', price: 12500 },
+            { id: 'ITM-002', name: 'Gula Pasir Kristal', category: 'Bahan Baku', unit: 'Kg', price: 16000 },
+            { id: 'ITM-003', name: 'Minyak Goreng Sawit', category: 'Bahan Baku', unit: 'Liter', price: 18500 },
+            { id: 'ITM-004', name: 'Kertas HVS A4 80gsm', category: 'Opersional', unit: 'Box', price: 55000 },
+            { id: 'ITM-005', name: 'Tinta Printer Epson 664', category: 'Opersional', unit: 'Pcs', price: 95000 },
+            { id: 'ITM-006', name: 'Bonus Lembur Karyawan Shift', category: 'Insentif', unit: 'Orang', price: 150000 },
+            { id: 'ITM-007', name: 'Reward Kehadiran Bulanan', category: 'Insentif', unit: 'Orang', price: 250000 }
+        ];
+
+        let purchaseOrders = JSON.parse(localStorage.getItem('po_orders')) || [
+            {
+                id: 'PO-20261013-001',
+                date: '2026-10-13',
+                deliveryDate: '2026-10-15',
+                category: 'Bahan Baku',
+                supplierId: 'SUP-001',
+                items: [
+                    { name: 'Tepung Terigu Premium', qty: 100, unit: 'Kg', price: 12500, subtotal: 1250000 },
+                    { name: 'Gula Pasir Kristal', qty: 50, unit: 'Kg', price: 16000, subtotal: 800000 }
+                ],
+                subtotal: 2050000,
+                useTax: true,
+                tax: 225500,
+                grandTotal: 2275500,
+                notes: 'Mohon dikirim tepat waktu sesuai alamat gudang.',
+                terms: 'Tempo 30 Hari'
+            }
+        ];
+
+        let activeFilterCategoryItem = 'Semua';
+        let currentActivePOForPDF = null;
+
+        function switchTab(tabId) {
+            const tabs = ['dashboard', 'po', 'suppliers', 'items', 'reports'];
+            tabs.forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                const navBtn = document.getElementById(`nav-${t}`);
+                if (navBtn) {
+                    navBtn.className = "px-3.5 py-2 rounded-xl text-xs font-semibold transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800";
+                }
+            });
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const activeNav = document.getElementById(`nav-${tabId}`);
+            if (activeNav) {
+                activeNav.className = "px-3.5 py-2 rounded-xl text-xs font-semibold transition-all bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/80";
+            }
+
+            if(tabId === 'dashboard') renderDashboard();
+            if(tabId === 'po') initPOForm();
+            if(tabId === 'suppliers') renderSuppliers();
+            if(tabId === 'items') renderItems();
+            if(tabId === 'reports') renderReports();
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        function saveData() {
+            localStorage.setItem('po_suppliers', JSON.stringify(suppliers));
+            localStorage.setItem('po_items', JSON.stringify(items));
+            localStorage.setItem('po_orders', JSON.stringify(purchaseOrders));
+        }
+
+        function formatRupiah(number) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(number);
+        }
+
+        function renderDashboard() {
+            document.getElementById('dash-total-po').innerText = purchaseOrders.length;
+            const totalSpend = purchaseOrders.reduce((acc, curr) => acc + curr.grandTotal, 0);
+            document.getElementById('dash-total-spend').innerText = formatRupiah(totalSpend);
+            document.getElementById('dash-total-suppliers').innerText = suppliers.length;
+            document.getElementById('dash-total-items').innerText = items.length;
+
+            const tbody = document.getElementById('recent-po-table');
+            tbody.innerHTML = '';
+            if (purchaseOrders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400 dark:text-slate-500 text-xs">Belum ada Purchase Order dibuat.</td></tr>`;
+                return;
+            }
+
+            const recent = [...purchaseOrders].reverse().slice(0, 5);
+            recent.forEach(po => {
+                const supp = suppliers.find(s => s.id === po.supplierId);
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition";
+                tr.innerHTML = `
+                    <td class="py-3 px-3 font-semibold text-indigo-600 dark:text-indigo-400">${po.id}</td>
+                    <td class="py-3 px-3 text-slate-600 dark:text-slate-300">${po.date}</td>
+                    <td class="py-3 px-3 text-slate-900 dark:text-white font-medium">${supp ? (supp.entity ? supp.entity + ' ' + supp.name : supp.name) : 'Unknown'}</td>
+                    <td class="py-3 px-3"><span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${po.category === 'Bahan Baku' ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400' : po.category === 'Opersional' ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400' : 'bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400'}">${po.category}</span></td>
+                    <td class="py-3 px-3 font-bold text-slate-900 dark:text-white">${formatRupiah(po.grandTotal)}</td>
+                    <td class="py-3 px-3 text-center space-x-1">
+                        <button onclick="previewPO('${po.id}')" class="p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg transition" title="Pratinjau / Cetak"><i class="fa-solid fa-eye"></i></button>
+                        <button onclick="deletePO('${po.id}')" class="p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-red-100 dark:hover:bg-red-950/50 text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 rounded-lg transition" title="Hapus PO"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function deletePO(poId) {
+            if (confirm(`Apakah Anda yakin ingin menghapus Purchase Order ${poId}?`)) {
+                purchaseOrders = purchaseOrders.filter(p => p.id !== poId);
+                saveData();
+                renderDashboard();
+                renderReports();
+            }
+        }
+
+        function downloadSuppliersPDF() {
+            const element = document.getElementById('printable-suppliers-area');
+            const opt = {
+                margin:       10,
+                filename:     `Daftar-Supplier-${new Date().toISOString().split('T')[0]}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+            html2pdf().from(element).set(opt).save();
+        }
+
+        function downloadItemsPDF() {
+            const element = document.getElementById('printable-items-area');
+            const catName = activeFilterCategoryItem || 'Semua';
+            const opt = {
+                margin:       10,
+                filename:     `Database-Bahan-${catName}-${new Date().toISOString().split('T')[0]}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().from(element).set(opt).save();
+        }
+
+        function openPOWithCategory(category) {
+            switchTab('po');
+            const radios = document.getElementsByName('po_category');
+            for(let r of radios) {
+                if(r.value === category) {
+                    r.checked = true;
+                    break;
+                }
+            }
+            onCategoryChange();
+        }
+
+        function initPOForm() {
+            const dateStr = new Date().toISOString().split('T')[0];
+            document.getElementById('po-date').value = dateStr;
+            const poNum = `PO-${dateStr.replace(/-/g,'')}-${String(purchaseOrders.length + 1).padStart(3, '0')}`;
+            document.getElementById('display-po-number').innerText = poNum;
+
+            const radios = document.getElementsByName('po_category');
+            for(let r of radios) r.checked = false;
+
+            updateSupplierDropdown('');
+            document.getElementById('supplier-preview').classList.add('hidden');
+            document.getElementById('po-items-body').innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400 dark:text-slate-500 text-xs">Pilih kategori dan supplier terlebih dahulu.</td></tr>`;
+            document.getElementById('po-subtotal-text').innerText = 'Rp 0';
+            document.getElementById('po-tax-text').innerText = 'Rp 0';
+            document.getElementById('po-grandtotal-text').innerText = 'Rp 0';
+            document.getElementById('po-use-tax').checked = false;
+            document.getElementById('tax-row').classList.add('hidden');
+        }
+
+        function onCategoryChange() {
+            const selectedCat = document.querySelector('input[name="po_category"]:checked')?.value;
+            if(!selectedCat) return;
+
+            updateSupplierDropdown(selectedCat);
+            
+            const tbody = document.getElementById('po-items-body');
+            tbody.innerHTML = '';
+            addPOItemRow();
+        }
+
+        function updateSupplierDropdown(category) {
+            const select = document.getElementById('po-supplier');
+            select.innerHTML = '<option value="">-- Pilih Supplier --</option>';
+            
+            const filtered = category ? suppliers.filter(s => s.category === category) : suppliers;
+            filtered.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.id;
+                opt.textContent = `${s.entity ? s.entity + ' ' : ''}${s.name} (${s.category})`;
+                select.appendChild(opt);
+            });
+            document.getElementById('supplier-preview').classList.add('hidden');
+        }
+
+        function updateSupplierDetails() {
+            const suppId = document.getElementById('po-supplier').value;
+            const preview = document.getElementById('supplier-preview');
+            if(!suppId) {
+                preview.classList.add('hidden');
+                return;
+            }
+            const supp = suppliers.find(s => s.id === suppId);
+            if(supp) {
+                document.getElementById('prev-supp-name').innerText = (supp.entity ? supp.entity + ' ' : '') + supp.name;
+                document.getElementById('prev-supp-address').innerText = supp.address;
+                document.getElementById('prev-supp-entity').innerText = supp.entity || '-';
+                document.getElementById('prev-supp-commodity').innerText = supp.commodity || '-';
+                document.getElementById('prev-supp-leader').innerText = supp.leader || '-';
+                document.getElementById('prev-supp-contract').innerText = supp.contract || '-';
+                document.getElementById('prev-supp-contact').innerText = supp.contact;
+                document.getElementById('prev-supp-phone').innerText = supp.phone;
+                preview.classList.remove('hidden');
+            }
+        }
+
+        function addPOItemRow() {
+            const tbody = document.getElementById('po-items-body');
+            if(tbody.querySelector('td[colspan]')) {
+                tbody.innerHTML = '';
+            }
+
+            const selectedCat = document.querySelector('input[name="po_category"]:checked')?.value || 'Bahan Baku';
+            const catItems = items.filter(i => i.category === selectedCat);
+
+            const tr = document.createElement('tr');
+            tr.className = "border-b border-slate-100 dark:border-slate-800 item-row";
+            
+            let itemOptions = `<option value="">-- Pilih Item / Bahan --</option>`;
+            catItems.forEach(it => {
+                itemOptions += `<option value="${it.name}" data-price="${it.price}" data-unit="${it.unit}">${it.name} (${it.unit})</option>`;
+            });
+
+            tr.innerHTML = `
+                <td class="py-2.5 px-3">
+                    <select class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-white item-select focus:outline-none focus:ring-2 focus:ring-indigo-500" onchange="onItemRowSelect(this)" required>
+                        ${itemOptions}
+                    </select>
+                </td>
+                <td class="py-2.5 px-3">
+                    <input type="number" min="1" value="1" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-white item-qty focus:outline-none focus:ring-2 focus:ring-indigo-500" oninput="calculatePOTotals()" required>
+                </td>
+                <td class="py-2.5 px-3">
+                    <input type="text" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs item-unit bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400" readonly placeholder="Satuan">
+                </td>
+                <td class="py-2.5 px-3">
+                    <input type="number" min="0" value="0" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-white item-price focus:outline-none focus:ring-2 focus:ring-indigo-500" oninput="calculatePOTotals()" required>
+                </td>
+                <td class="py-2.5 px-3">
+                    <input type="text" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs item-subtotal bg-slate-50 dark:bg-slate-800/50 font-semibold text-slate-800 dark:text-slate-200" readonly value="Rp 0">
+                </td>
+                <td class="py-2.5 px-3 text-center">
+                    <button type="button" onclick="removePOItemRow(this)" class="p-2 text-red-500 hover:text-red-700 dark:hover:text-red-400 transition"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        function removePOItemRow(btn) {
+            const tr = btn.closest('tr');
+            tr.remove();
+            calculatePOTotals();
+            const tbody = document.getElementById('po-items-body');
+            if(tbody.children.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400 dark:text-slate-500 text-xs">Belum ada item dipilih.</td></tr>`;
+            }
+        }
+
+        function onItemRowSelect(select) {
+            const tr = select.closest('tr');
+            const selectedOpt = select.options[select.selectedIndex];
+            const price = selectedOpt.getAttribute('data-price') || 0;
+            const unit = selectedOpt.getAttribute('data-unit') || '';
+
+            tr.querySelector('.item-price').value = price;
+            tr.querySelector('.item-unit').value = unit;
+            calculatePOTotals();
+        }
+
+        function calculatePOTotals() {
+            const rows = document.querySelectorAll('.item-row');
+            let subtotal = 0;
+
+            rows.forEach(tr => {
+                const qty = parseFloat(tr.querySelector('.item-qty').value) || 0;
+                const price = parseFloat(tr.querySelector('.item-price').value) || 0;
+                const rowSubtotal = qty * price;
+                tr.querySelector('.item-subtotal').value = formatRupiah(rowSubtotal);
+                subtotal += rowSubtotal;
+            });
+
+            const useTax = document.getElementById('po-use-tax').checked;
+            const taxRow = document.getElementById('tax-row');
+            let tax = 0;
+
+            if (useTax) {
+                tax = subtotal * 0.11;
+                taxRow.classList.remove('hidden');
+            } else {
+                taxRow.classList.add('hidden');
+            }
+
+            const grandTotal = subtotal + tax;
+
+            document.getElementById('po-subtotal-text').innerText = formatRupiah(subtotal);
+            document.getElementById('po-tax-text').innerText = formatRupiah(tax);
+            document.getElementById('po-grandtotal-text').innerText = formatRupiah(grandTotal);
+        }
+
+        function handlePOSubmit(e) {
+            e.preventDefault();
+            const selectedCat = document.querySelector('input[name="po_category"]:checked')?.value;
+            const suppId = document.getElementById('po-supplier').value;
+            const poDate = document.getElementById('po-date').value;
+            const deliveryDate = document.getElementById('po-delivery-date').value;
+            const notes = document.getElementById('po-notes').value;
+            const terms = document.getElementById('po-terms').value;
+            const useTax = document.getElementById('po-use-tax').checked;
+
+            const rows = document.querySelectorAll('.item-row');
+            if (rows.length === 0) {
+                alert('Harap tambahkan minimal 1 item kebutuhan.');
+                return;
+            }
+
+            const itemsList = [];
+            let subtotal = 0;
+
+            rows.forEach(tr => {
+                const name = tr.querySelector('.item-select').value;
+                const qty = parseFloat(tr.querySelector('.item-qty').value) || 0;
+                const unit = tr.querySelector('.item-unit').value;
+                const price = parseFloat(tr.querySelector('.item-price').value) || 0;
+                const rowSubtotal = qty * price;
+
+                if (name && qty > 0) {
+                    itemsList.push({ name, qty, unit, price, subtotal: rowSubtotal });
+                    subtotal += rowSubtotal;
+                }
+            });
+
+            if (itemsList.length === 0) {
+                alert('Harap pilih nama item pada tabel rincian.');
+                return;
+            }
+
+            const tax = useTax ? subtotal * 0.11 : 0;
+            const grandTotal = subtotal + tax;
+            const poNum = document.getElementById('display-po-number').innerText;
+
+            const newPO = {
+                id: poNum,
+                date: poDate,
+                deliveryDate,
+                category: selectedCat,
+                supplierId: suppId,
+                items: itemsList,
+                subtotal,
+                useTax,
+                tax,
+                grandTotal,
+                notes,
+                terms
+            };
+
+            purchaseOrders.push(newPO);
+            saveData();
+            alert(`Purchase Order ${poNum} Berhasil Dibuat!`);
+            previewPO(poNum);
+            switchTab('dashboard');
+        }
+
+        // --- Supplier Management Logic ---
+        function renderSuppliers() {
+            const tbody = document.getElementById('suppliers-table-body');
+            tbody.innerHTML = '';
+
+            if (suppliers.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="py-6 text-center text-slate-400 dark:text-slate-500 text-xs">Belum ada data supplier.</td></tr>`;
+                return;
+            }
+
+            suppliers.forEach(s => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition";
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-bold text-slate-900 dark:text-white">${s.name}</td>
+                    <td class="py-3 px-4"><span class="px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 font-semibold text-[11px]">${s.entity || '-'}</span></td>
+                    <td class="py-3 px-4 text-slate-600 dark:text-slate-300">${s.commodity || '-'}</td>
+                    <td class="py-3 px-4 text-slate-700 dark:text-slate-200 font-medium">${s.leader || '-'}</td>
+                    <td class="py-3 px-4 font-mono text-slate-600 dark:text-slate-400">${s.contract || '-'}</td>
+                    <td class="py-3 px-4 text-slate-600 dark:text-slate-300">${s.contact}</td>
+                    <td class="py-3 px-4 text-slate-600 dark:text-slate-300">${s.phone}</td>
+                    <td class="py-3 px-4 text-center space-x-1 no-print">
+                        <button onclick="editSupplier('${s.id}')" class="p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg transition"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button onclick="deleteSupplier('${s.id}')" class="p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-red-100 dark:hover:bg-red-950/50 text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 rounded-lg transition"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openSupplierModal(suppId = null) {
+            const modal = document.getElementById('supplier-modal');
+            const form = document.getElementById('supplier-form');
+            form.reset();
+            document.getElementById('supplier-id').value = '';
+
+            if (suppId) {
+                const s = suppliers.find(item => item.id === suppId);
+                if (s) {
+                    document.getElementById('supplier-modal-title').innerText = "Edit Data Supplier";
+                    document.getElementById('supplier-id').value = s.id;
+                    document.getElementById('supp-name').value = s.name;
+                    document.getElementById('supp-entity').value = s.entity || 'PT. Perseorangan';
+                    document.getElementById('supp-commodity').value = s.commodity || '';
+                    document.getElementById('supp-leader').value = s.leader || '';
+                    document.getElementById('supp-contract').value = s.contract || '';
+                    document.getElementById('supp-category').value = s.category;
+                    document.getElementById('supp-contact').value = s.contact;
+                    document.getElementById('supp-phone').value = s.phone;
+                    document.getElementById('supp-address').value = s.address;
+                }
+            } else {
+                document.getElementById('supplier-modal-title').innerText = "Tambah Supplier Baru";
+            }
+            modal.classList.remove('hidden');
+        }
+
+        function closeSupplierModal() {
+            document.getElementById('supplier-modal').classList.add('hidden');
+        }
+
+        function handleSupplierSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('supplier-id').value;
+            const name = document.getElementById('supp-name').value.trim();
+            const entity = document.getElementById('supp-entity').value;
+            const commodity = document.getElementById('supp-commodity').value.trim();
+            const leader = document.getElementById('supp-leader').value.trim();
+            const contract = document.getElementById('supp-contract').value.trim();
+            const category = document.getElementById('supp-category').value;
+            const contact = document.getElementById('supp-contact').value.trim();
+            const phone = document.getElementById('supp-phone').value.trim();
+            const address = document.getElementById('supp-address').value.trim();
+
+            if (id) {
+                const idx = suppliers.findIndex(s => s.id === id);
+                if (idx !== -1) {
+                    suppliers[idx] = { id, name, entity, commodity, leader, contract, category, contact, phone, address };
+                }
+            } else {
+                const newId = `SUP-${String(suppliers.length + 1).padStart(3, '0')}`;
+                suppliers.push({ id: newId, name, entity, commodity, leader, contract, category, contact, phone, address });
+            }
+
+            saveData();
+            closeSupplierModal();
+            renderSuppliers();
+        }
+
+        function editSupplier(id) {
+            openSupplierModal(id);
+        }
+
+        function deleteSupplier(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus supplier ini?')) {
+                suppliers = suppliers.filter(s => s.id !== id);
+                saveData();
+                renderSuppliers();
+            }
+        }
+
+        // --- Item / Bahan Baku Management Logic ---
+        function renderItems() {
+            const tbody = document.getElementById('items-table-body');
+            tbody.innerHTML = '';
+
+            let filtered = items;
+            if (activeFilterCategoryItem !== 'Semua') {
+                filtered = items.filter(i => i.category === activeFilterCategoryItem);
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400 dark:text-slate-500 text-xs">Belum ada item dalam kategori ini.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(it => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition";
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-bold text-slate-900 dark:text-white">${it.name}</td>
+                    <td class="py-3 px-4"><span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${it.category === 'Bahan Baku' ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400' : it.category === 'Opersional' ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400' : 'bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400'}">${it.category}</span></td>
+                    <td class="py-3 px-4 text-slate-600 dark:text-slate-300">${it.unit}</td>
+                    <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">${formatRupiah(it.price)}</td>
+                    <td class="py-3 px-4 text-center space-x-1 no-print">
+                        <button onclick="editItem('${it.id}')" class="p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg transition"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button onclick="deleteItem('${it.id}')" class="p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-red-100 dark:hover:bg-red-950/50 text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 rounded-lg transition"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterItemCategory(category) {
+            activeFilterCategoryItem = category;
+            const btns = {
+                'Semua': 'filter-item-semua',
+                'Bahan Baku': 'filter-item-bahan',
+                'Opersional': 'filter-item-op',
+                'Insentif': 'filter-item-ins'
+            };
+
+            Object.keys(btns).forEach(key => {
+                const btn = document.getElementById(btns[key]);
+                if (key === category) {
+                    btn.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition";
+                } else {
+                    btn.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition";
+                }
+            });
+
+            renderItems();
+        }
+
+        function openItemModal(itemId = null) {
+            const modal = document.getElementById('item-modal');
+            const form = document.getElementById('item-form');
+            form.reset();
+            document.getElementById('item-id').value = '';
+
+            if (itemId) {
+                const it = items.find(i => i.id === itemId);
+                if (it) {
+                    document.getElementById('item-modal-title').innerText = "Edit Item / Bahan";
+                    document.getElementById('item-id').value = it.id;
+                    document.getElementById('it-name').value = it.name;
+                    document.getElementById('it-category').value = it.category;
+                    document.getElementById('it-unit').value = it.unit;
+                    document.getElementById('it-price').value = it.price;
+                }
+            } else {
+                document.getElementById('item-modal-title').innerText = "Tambah Item / Bahan Baru";
+            }
+            modal.classList.remove('hidden');
+        }
+
+        function closeItemModal() {
+            document.getElementById('item-modal').classList.add('hidden');
+        }
+
+        function handleItemSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('item-id').value;
+            const name = document.getElementById('it-name').value.trim();
+            const category = document.getElementById('it-category').value;
+            const unit = document.getElementById('it-unit').value.trim();
+            const price = parseFloat(document.getElementById('it-price').value) || 0;
+
+            if (id) {
+                const idx = items.findIndex(i => i.id === id);
+                if (idx !== -1) {
+                    items[idx] = { id, name, category, unit, price };
+                }
+            } else {
+                const newId = `ITM-${String(items.length + 1).padStart(3, '0')}`;
+                items.push({ id: newId, name, category, unit, price });
+            }
+
+            saveData();
+            closeItemModal();
+            renderItems();
+        }
+
+        function editItem(id) {
+            openItemModal(id);
+        }
+
+        function deleteItem(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus item ini?')) {
+                items = items.filter(i => i.id !== id);
+                saveData();
+                renderItems();
+            }
+        }
+
+        // --- Reports Logic ---
+        function toggleReportFilters() {
+            const type = document.getElementById('report-type').value;
+            document.getElementById('filter-container-date').classList.toggle('hidden', type !== 'daily' && type !== 'weekly');
+            document.getElementById('filter-container-month').classList.toggle('hidden', type !== 'monthly');
+            document.getElementById('filter-container-year').classList.toggle('hidden', type !== 'yearly');
+            renderReports();
+        }
+
+        function renderReports() {
+            const type = document.getElementById('report-type').value;
+            const selectedCat = document.getElementById('report-category').value;
+            let filteredPO = [...purchaseOrders];
+
+            if (selectedCat !== 'Semua') {
+                filteredPO = filteredPO.filter(p => p.category === selectedCat);
+            }
+
+            if (type === 'daily') {
+                const dateVal = document.getElementById('report-date').value || new Date().toISOString().split('T')[0];
+                document.getElementById('report-date').value = dateVal;
+                filteredPO = filteredPO.filter(p => p.date === dateVal);
+                document.getElementById('report-period-title').innerText = `Periode Harian: ${dateVal}`;
+            } else if (type === 'monthly') {
+                const monthVal = document.getElementById('report-month').value || new Date().toISOString().slice(0, 7);
+                document.getElementById('report-month').value = monthVal;
+                filteredPO = filteredPO.filter(p => p.date.startsWith(monthVal));
+                document.getElementById('report-period-title').innerText = `Periode Bulanan: ${monthVal}`;
+            } else if (type === 'yearly') {
+                const yearVal = document.getElementById('report-year').value || '2026';
+                filteredPO = filteredPO.filter(p => p.date.startsWith(yearVal));
+                document.getElementById('report-period-title').innerText = `Periode Tahunan: ${yearVal}`;
+            }
+
+            const totalCount = filteredPO.length;
+            const totalAmount = filteredPO.reduce((acc, curr) => acc + curr.grandTotal, 0);
+            const avgAmount = totalCount > 0 ? totalAmount / totalCount : 0;
+
+            document.getElementById('report-summary-count').innerText = `${totalCount} PO`;
+            document.getElementById('report-summary-amount').innerText = formatRupiah(totalAmount);
+            document.getElementById('report-summary-avg').innerText = formatRupiah(avgAmount);
+
+            const tbody = document.getElementById('report-table-body');
+            tbody.innerHTML = '';
+
+            if (filteredPO.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400 dark:text-slate-500 text-xs">Tidak ada data Purchase Order pada periode ini.</td></tr>`;
+                return;
+            }
+
+            filteredPO.forEach(po => {
+                const supp = suppliers.find(s => s.id === po.supplierId);
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition";
+                tr.innerHTML = `
+                    <td class="py-3 px-3 font-semibold text-indigo-600 dark:text-indigo-400">${po.id}</td>
+                    <td class="py-3 px-3 text-slate-600 dark:text-slate-300">${po.date}</td>
+                    <td class="py-3 px-3 text-slate-900 dark:text-white font-medium">${supp ? (supp.entity ? supp.entity + ' ' + supp.name : supp.name) : 'Unknown'}</td>
+                    <td class="py-3 px-3"><span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${po.category === 'Bahan Baku' ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400' : po.category === 'Opersional' ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400' : 'bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400'}">${po.category}</span></td>
+                    <td class="py-3 px-3 text-slate-600 dark:text-slate-300">${po.items.length} Item</td>
+                    <td class="py-3 px-3 font-bold text-slate-900 dark:text-white text-right">${formatRupiah(po.grandTotal)}</td>
+                    <td class="py-3 px-3 text-center no-print">
+                        <button onclick="previewPO('${po.id}')" class="p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg transition" title="Lihat PDF PO"><i class="fa-solid fa-eye"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function downloadReportPDF() {
+            const element = document.getElementById('report-printable-area');
+            const opt = {
+                margin:       10,
+                filename:     `Laporan-Purchase-Order-${new Date().toISOString().split('T')[0]}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+            html2pdf().from(element).set(opt).save();
+        }
+
+        // --- PO Preview & Individual PDF Generation ---
+        function previewPO(poId) {
+            const po = purchaseOrders.find(p => p.id === poId);
+            if (!po) return;
+            currentActivePOForPDF = po;
+
+            const supp = suppliers.find(s => s.id === po.supplierId) || {};
+
+            document.getElementById('pdf-po-number').innerText = `No: ${po.id}`;
+            document.getElementById('pdf-supp-name').innerText = (supp.entity ? supp.entity + ' ' : '') + (supp.name || 'Unknown');
+            document.getElementById('pdf-supp-address').innerText = supp.address || '-';
+            document.getElementById('pdf-supp-entity').innerText = supp.entity || '-';
+            document.getElementById('pdf-supp-commodity').innerText = supp.commodity || '-';
+            document.getElementById('pdf-supp-leader').innerText = supp.leader || '-';
+            document.getElementById('pdf-supp-contract').innerText = supp.contract || '-';
+            document.getElementById('pdf-supp-contact').innerText = `${supp.contact || '-'} (${supp.phone || '-'})`;
+            document.getElementById('pdf-po-date').innerText = po.date;
+            document.getElementById('pdf-po-delivery').innerText = po.deliveryDate || '-';
+            document.getElementById('pdf-po-category').innerText = po.category;
+
+            const tbody = document.getElementById('pdf-items-body');
+            tbody.innerHTML = '';
+            po.items.forEach((item, idx) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-2.5 px-3 text-slate-500">${idx + 1}</td>
+                    <td class="py-2.5 px-3 font-semibold text-slate-800">${item.name}</td>
+                    <td class="py-2.5 px-3 text-center text-slate-700">${item.qty}</td>
+                    <td class="py-2.5 px-3 text-slate-600">${item.unit}</td>
+                    <td class="py-2.5 px-3 text-right text-slate-700">${formatRupiah(item.price)}</td>
+                    <td class="py-2.5 px-3 text-right font-bold text-slate-900">${formatRupiah(item.subtotal)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('pdf-subtotal').innerText = formatRupiah(po.subtotal);
+            const taxContainer = document.getElementById('pdf-tax-container');
+            if (po.useTax) {
+                document.getElementById('pdf-tax').innerText = formatRupiah(po.tax);
+                taxContainer.classList.remove('hidden');
+            } else {
+                taxContainer.classList.add('hidden');
+            }
+            document.getElementById('pdf-grandtotal').innerText = formatRupiah(po.grandTotal);
+            document.getElementById('pdf-notes').innerText = po.notes || 'Tidak ada catatan tambahan.';
+            document.getElementById('pdf-terms').innerText = po.terms || 'Pembayaran standar.';
+
+            document.getElementById('po-preview-modal').classList.remove('hidden');
+        }
+
+        function closePOPreviewModal() {
+            document.getElementById('po-preview-modal').classList.add('hidden');
+        }
+
+        function downloadActivePOPDF() {
+            if (!currentActivePOForPDF) return;
+            const element = document.getElementById('printable-po-document');
+            const opt = {
+                margin:       8,
+                filename:     `Dokumen-${currentActivePOForPDF.id}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().from(element).set(opt).save();
+        }
+
+        // --- Initialization ---
+        window.onload = function() {
+            initTheme();
+            checkAuth();
+            renderDashboard();
+        };
+    </script>
+</body>
+</html>
