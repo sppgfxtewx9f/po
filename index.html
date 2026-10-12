@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Purchase Order (PO) Terpadu</title>
+    <title>OPET</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Inter & FontAwesome Icons -->
@@ -103,16 +103,16 @@
                 </div>
 
                 <div>
-                    <h2 class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Masuk Sistem PO</h2>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Kelola Purchase Order & Inventory Bahan Baku</p>
+                    <h2 class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">O.P.E.T</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Sistem Kelola Purchase Order (PO)</p>
                 </div>
 
                 <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Username / Email</label>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Username</label>
                         <div class="relative">
                             <i class="fa-solid fa-user absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
-                            <input type="text" id="login-username" required class="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition outline-none" placeholder="admin / staff">
+                            <input type="text" id="login-username" required class="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition outline-none" placeholder="username">
                         </div>
                     </div>
                     <div>
@@ -134,11 +134,13 @@
                 </form>
 
                 <!-- Demo Account Info Box -->
+                <!--
                 <div class="pt-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 -mx-8 -mb-8 p-6 text-xs text-slate-600 dark:text-slate-400 space-y-1">
                     <p class="font-bold text-slate-700 dark:text-slate-300">Akun Demo Default:</p>
                     <p>• Username: <code class="bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded text-indigo-600 dark:text-indigo-400 font-mono">admin</code> | Pass: <code class="bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded text-indigo-600 dark:text-indigo-400 font-mono">admin123</code> (Manager)</p>
                     <p>• Username: <code class="bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded text-indigo-600 dark:text-indigo-400 font-mono">staff</code> | Pass: <code class="bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded text-indigo-600 dark:text-indigo-400 font-mono">staff123</code> (Purchasing)</p>
                 </div>
+                -->
             </div>
         </div>
     </div>
@@ -150,7 +152,7 @@
                     <i class="fa-solid fa-file-invoice-dollar text-lg"></i>
                 </div>
                 <div>
-                    <h1 class="font-bold text-base leading-tight text-slate-900 dark:text-white">PO Manager <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 font-medium">Pro</span></h1>
+                    <h1 class="font-bold text-base leading-tight text-slate-900 dark:text-white">OPET Manager<span class="text-xs px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 font-medium">Pro</span></h1>
                     <p class="text-[11px] text-slate-500 dark:text-slate-400">Purchase Order & Inventory System</p>
                 </div>
             </div>
@@ -341,7 +343,7 @@
                                     </div>
                                     <div>
                                         <h4 class="font-bold text-slate-900 dark:text-white text-xs">Operasional</h4>
-                                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Alat & keperluan kantor</p>
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400">ATK, APD, Gas & Galon</p>
                                     </div>
                                 </div>
                             </label>
@@ -353,7 +355,7 @@
                                     </div>
                                     <div>
                                         <h4 class="font-bold text-slate-900 dark:text-white text-xs">Insentif</h4>
-                                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Bonus & reward karyawan</p>
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Harian SPPG</p>
                                     </div>
                                 </div>
                             </label>
@@ -382,7 +384,7 @@
                     <div id="supplier-preview" class="hidden bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 space-y-1">
                         <p class="font-bold text-slate-900 dark:text-white" id="prev-supp-name">-</p>
                         <p id="prev-supp-address">-</p>
-                        <p>Kontak: <span id="prev-supp-contact" class="font-semibold">-</span> | Telp: <span id="prev-supp-phone" class="font-semibold">-</span></p>
+                        <p>PIC: <span id="prev-supp-contact" class="font-semibold">-</span> | Telp: <span id="prev-supp-phone" class="font-semibold">-</span></p>
                     </div>
 
                     <!-- Step 3: Itemized List -->
@@ -395,8 +397,8 @@
                             <table class="w-full text-left border-collapse text-xs">
                                 <thead>
                                     <tr class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider border-y border-slate-200 dark:border-slate-700">
-                                        <th class="py-2.5 px-3 w-2/5">Nama Item / Bahan / Keperluan</th>
-                                        <th class="py-2.5 px-3 w-1/6">Jumlah / Qty</th>
+                                        <th class="py-2.5 px-3 w-2/5">Nama Item</th>
+                                        <th class="py-2.5 px-3 w-1/6">Jumlah</th>
                                         <th class="py-2.5 px-3 w-1/6">Satuan</th>
                                         <th class="py-2.5 px-3 w-1/5">Harga Satuan (Rp)</th>
                                         <th class="py-2.5 px-3 w-1/5">Subtotal (Rp)</th>
@@ -441,7 +443,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Syarat & Ketentuan Pembayaran</label>
-                            <textarea id="po-terms" rows="3" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none text-xs">Pembayaran Tempo 30 Hari Setelah Barang Diterima.</textarea>
+                            <textarea id="po-terms" rows="3" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none text-xs">Pembayaran Tempo 24 Jam Setelah Barang & Tagihan Diterima.</textarea>
                         </div>
                     </div>
 
@@ -725,9 +727,9 @@
                         <p class="text-xs text-slate-500 mt-1" id="pdf-po-number">No: PO-20261013-001</p>
                     </div>
                     <div class="text-right">
-                        <h3 class="font-bold text-slate-900 text-sm">PT. PERUSAHAAN ANDALAN</h3>
-                        <p class="text-xs text-slate-500">Jl. Industri Raya No. 45, Jakarta</p>
-                        <p class="text-xs text-slate-500">Email: procurement@perusahaan.com | Telp: (021) 555-0199</p>
+                        <h3 class="font-bold text-slate-900 text-sm">SPPG Cianjur Tanggeung Sukajaya</h3>
+                        <p class="text-xs text-slate-500">Kp. Babakan rt 003 rw 003 Desa Sukajaya-Tanggeung</p>
+                        <p class="text-xs text-slate-500">Email: sppgfxtewx9f@gmail.com | Telp: 085224149693</p>
                     </div>
                 </div>
 
@@ -737,11 +739,11 @@
                         <p class="font-bold text-slate-700 uppercase">Kepada Supplier:</p>
                         <p id="pdf-supp-name" class="font-semibold text-slate-900 text-sm">-</p>
                         <p id="pdf-supp-address" class="text-slate-600">-</p>
-                        <p>Telp/Kontak: <span id="pdf-supp-contact" class="font-medium">-</span></p>
+                        <p>Telp: <span id="pdf-supp-contact" class="font-medium">-</span></p>
                     </div>
                     <div class="space-y-1 bg-slate-50 p-4 rounded-xl border border-slate-100 text-right">
                         <p><strong>Tanggal PO:</strong> <span id="pdf-po-date">-</span></p>
-                        <p><strong>Estimasi Kirim:</strong> <span id="pdf-po-delivery">-</span></p>
+                        <p><strong>Tanggal Kirim:</strong> <span id="pdf-po-delivery">-</span></p>
                         <p><strong>Kategori:</strong> <span id="pdf-po-category" class="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded font-semibold">-</span></p>
                     </div>
                 </div>
@@ -799,16 +801,18 @@
                 <div class="grid grid-cols-3 pt-12 text-center text-xs">
                     <div>
                         <p class="text-slate-500 mb-16">Dibuat Oleh,</p>
-                        <p class="font-bold border-b border-slate-400 pb-1 inline-block px-6">Purchasing Staff</p>
+                        <p class="font-bold border-b border-slate-400 pb-1 inline-block px-6">Regi Febriansyah</p>
+                        <p class="font-bold border-b border-slate-400 pb-1 inline-block px-3">PIC Yayasan</p>
                     </div>
                     <div>
                         <p class="text-slate-500 mb-16">Disetujui Oleh,</p>
-                        <p class="font-bold border-b border-slate-400 pb-1 inline-block px-6">Manager Keuangan</p>
+                        <p class="font-bold border-b border-slate-400 pb-1 inline-block px-6">Moh. Rahdian Saleh</p>
+                        <p class="font-bold border-b border-slate-400 pb-1 inline-block px-3">Pengawas Keuangan SPPG</p>
                     </div>
                     <div>
-                        <p class="text-slate-500 mb-16">Disetujui Supplier,</p>
-                        <p class="font-bold border-b border-slate-400 pb-1 inline-block px-6">Hormat Kami</p>
-                    </div>
+                        <p class="text-slate-500 mb-16">Diketahui Oleh,</p>
+                        <p class="font-bold border-b border-slate-400 pb-1 inline-block px-6">Nuradi</p>
+                        <p class="font-bold border-b border-slate-400 pb-1 inline-block px-3">Kepala SPPG</p></div>
                 </div>
             </div>
 
