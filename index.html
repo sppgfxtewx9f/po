@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="id" class="light">
 <head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OPET - Purchase Order & Inventory System</title>
@@ -1310,6 +1312,23 @@
         window.onload = function() {
             checkAuth();
         };
+        // Hubungkan aplikasi ke Supabase menggunakan URL dan Kunci Anda
+const SUPABASE_URL = 'https://dznnlnucnmktfzhufiaj.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6bm5sbnVjbm1rdGZ6aHVmaWFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNDE1NDUsImV4cCI6MjEwNzcxNzU0NX0.eKpGPARd63_SNb5UUrBL9PRwZ8kmY2y1j8Tg2h3wAOM';
+
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Contoh fungsi untuk mengambil data barang dari database Supabase
+async function ambilDataDariSupabase() {
+    const { data, error } = await supabaseClient.from('inventory').select('*');
+    if (error) {
+        console.error('Gagal mengambil data:', error.message);
+        return;
+    }
+    console.log('Data Inventaris dari Supabase:', data);
+}
+
+        
     </script>
 </body>
 </html>
